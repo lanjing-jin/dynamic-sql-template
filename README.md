@@ -1,10 +1,10 @@
 # dynamic-sql-template
 SQL Server dynamic SQL templating solution
 
-This project aims to let you to write dynamic SQL queries in the most intuitive way, similarly to how you would write normal SQL, using templates embedded in your regular SQL text (as comments). If you have been writing dynamic SQL using string concatenation, and got tired of counting single quotes and string concatenation, and frustrated over difficulties in proof-reading and troubleshooting, you're in the right place. Start by copy-pasting the examples and you'll be on your way to dynamic SQL greatness!
+This project aims to let you to write dynamic SQL queries in the simplest, most intuitive way, similarly to how you would write normal SQL, using templates embedded in your regular SQL text (as comments). If you have been writing dynamic SQL using string concatenation, and got tired of counting single quotes and string concatenation, and frustrated over difficulties in proof-reading and troubleshooting, you're in the right place.
 
 ## Installation
-`dynamic-sql-template` is a pure-SQL solution so installation is simple: Run each of the SQL scripts found under the /sql folder under your target database, and that's it!
+Run each of the SQL scripts found under the /sql folder under your target database, and that's it!
 
 ## Examples
 
@@ -35,6 +35,13 @@ print @sql
     </do_order>
 </dynamic_sql_templ>
 */
+```
+
+Output:
+```
+select person_id, date_of_birth, first_name, last_name, employer from t_person
+
+order by person_id
 ```
 
 Note:
