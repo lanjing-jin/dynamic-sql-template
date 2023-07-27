@@ -8,7 +8,9 @@ Run each of the SQL scripts found under the /sql folder under your target databa
 
 ## Examples
 
-### Simple example
+### Example 1
+
+Render a template by supplying arguments as literal values:
 
 ```sql
 declare @sql nvarchar(max)
@@ -49,3 +51,40 @@ Note:
 2. To define a conditional block, surround the block with a pair of opening/closing HTML tags named after the condition variable, e.g. `<do_order>...</do_order>`.
 3. Supply values of the named replacement fields and conditions in the JSON argument to render_tag().
 
+### Example 2
+
+Render a `select ... from ... order by ...` statement for each table in the current database. The order by clause will be based on the primary key columns of each table, omitted if the table doesn't have a primary key:
+
+```sql
+select x.*
+from sys.tables t
+outer apply (
+    select STRING_AGG(c.name, ',') within group (order by c.column_id) col_list
+    from sys.columns c
+    where c.object_id = t.object_id
+) a1 -- column list
+outer apply (
+    select STRING_AGG(c.name, ',') within group (order by ic.index_column_id) pk_col_list, count(*) pk_width
+    from sys.columns c
+    join sys.index_columns ic on c.object_id = ic.object_id and c.column_id = ic.column_id
+    join sys.indexes i on ic.object_id=i.object_id and ic.index_id=i.index_id
+    where c.object_id = t.object_id and i.is_primary_key = 1
+) a2 -- PK column list
+outer apply dbo.render_tag('dynamic_sql_templ', (select
+    col_list,
+    t.name table_name,
+    pk_col_list,
+    do_order = case when a2.pk_width>0 then 1 else 0 end
+    for json path, without_array_wrapper, include_null_values
+)) x
+
+-- Dynamic SQL template. Place anywhere in the same function, stored procedure, or ad-hoc query:
+/*
+<dynamic_sql_templ>
+    select <col_list/> from <table_name/>
+    <do_order>
+    order by <pk_col_list/>
+    </do_order>
+</dynamic_sql_templ>
+*/
+```
