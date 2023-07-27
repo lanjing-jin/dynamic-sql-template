@@ -3,12 +3,13 @@
 -- Author: Lanjing Jin
 --
 create or alter function dbo.render (
-	@text nvarchar(max),
+	@templ nvarchar(max),
 	@args_json nvarchar(max)
 )
 returns @results table(rendered varchar(max), ordinal int, template varchar(max), args_json nvarchar(max))
 as begin
-	declare @label1 varchar(255), @label2 varchar(255), @pos int, @pos1 int, @pos2 int, @key varchar(255), @value varchar(max), @type int, @cond bit
+	declare @text nvarchar(max) = @templ, @label1 varchar(255), @label2 varchar(255),
+		@pos int, @pos1 int, @pos2 int, @key varchar(255), @value varchar(max), @type int, @cond bit
 	declare CURS cursor local for select [key], [value], [type] from openjson(@args_json)
 	open CURS
 	fetch next from CURS into @key, @value, @type
@@ -54,8 +55,9 @@ as begin
 	deallocate CURS
 
 	insert into @results
-	select [value], ordinal, @text, @args_json
-	from dbo.split_string(@text, '<-->')
+	select r.[value], r.ordinal, t.[value], @args_json
+	from dbo.split_string(@text, '<-->') r
+	join dbo.split_string(@templ, '<-->') t on r.ordinal = t.ordinal
 	return
 end
 go
